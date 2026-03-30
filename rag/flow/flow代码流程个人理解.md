@@ -1,0 +1,244 @@
+```
+__init__（Pipeline类）：初始化Pipeline流水线，输入参数{dsl配置字典或字符串，租户ID，文档ID，任务ID，流程ID}
+1.如果dsl是字典格式，先转换成JSON字符串
+2.调用父类Graph的__init__方法初始化
+3.处理文档ID，获取对应的知识库ID，如果获取失败则清空文档ID
+```
+
+```
+callback（Pipeline类）：回调函数，用于更新组件执行进度和日志，输入参数{组件名称，进度值，消息内容}
+1.生成日志存储的Redis键，检查任务是否被取消，如果被取消则设置进度为-1
+2.从Redis获取现有日志对象，如果日志的最后一条记录是当前组件，则追加trace；否则新增组件记录
+3.如果不是END组件且有文档ID和任务ID，计算整体进度并更新数据库中的任务进度
+4.如果是END组件且没有文档ID，将DSL配置保存到日志中
+5.将更新后的日志对象存入Redis，设置30分钟过期
+6.检查任务是否被取消，如果是则抛出TaskCanceledException异常
+```
+
+```
+fetch_logs（Pipeline类）：获取执行日志，无输入参数
+1.生成日志存储的Redis键
+2.尝试从Redis获取日志数据并解析为JSON对象返回
+3.如果出现异常则记录日志并返回空列表
+```
+
+```
+run（Pipeline类）：执行整个流水线，输入参数{**kwargs，可传递额外参数}
+1.初始化日志存储到Redis，清空错误信息
+2.如果没有执行路径，默认从File组件开始执行
+3.如果有文档ID，更新任务进度为开始状态
+4.从当前路径索引位置开始，依次获取下游组件并执行
+5.循环执行每个组件：
+  -获取上一个组件对象和当前组件对象
+  -异步调用当前组件的invoke方法，传入上一个组件的输出
+  -如果当前组件报错，设置错误信息并调用回调通知
+  -获取当前组件的下游组件并添加到执行路径中
+6.调用END回调，记录最终输出
+7.如果没有错误，返回最后一个组件的输出；否则返回空字典
+```
+
+```
+__init__（ProcessParamBase类）：初始化处理组件参数基类，无输入参数
+1.调用父类ComponentParamBase的__init__方法
+2.设置默认超时时间为100000000
+3.设置persist_logs为True
+```
+
+```
+__init__（ProcessBase类）：初始化处理组件基类，输入参数{pipeline对象，组件ID，参数对象}
+1.调用父类ComponentBase的__init__方法
+2.如果pipeline有callback方法，则绑定当前组件ID的回调函数；否则绑定空回调
+```
+
+```
+invoke（ProcessBase类）：组件执行入口方法，输入参数{**kwargs，上游输出数据}
+1.记录创建时间，将上游输入参数保存到输出中
+2.在超时时间内执行_invoke方法，执行成功后回调进度100%
+3.如果出现异常，检查是否有异常默认值，有则设置，否则设置_ERROR字段
+4.记录执行耗时，返回输出结果
+```
+
+```
+_invoke（ProcessBase类）：抽象方法，子类必须实现，输入参数{**kwargs}
+1.使用@timeout装饰器设置超时时间（环境变量COMPONENT_EXEC_TIMEOUT，默认10分钟）
+2.抛出NotImplementedError异常，等待子类实现具体逻辑
+```
+
+```
+__init__（FileParam类）：File组件参数类初始化，无输入参数
+1.调用父类ProcessParamBase的__init__方法
+```
+
+```
+check（FileParam类）：参数校验方法，无输入参数
+1.空实现，不做任何校验
+```
+
+```
+get_input_form（FileParam类）：获取输入表单，无输入参数
+1.返回空字典
+```
+
+```
+_invoke（File类）：File组件具体实现，输入参数{**kwargs}
+1.如果有文档ID，从数据库获取文档信息
+  -如果获取失败，设置_ERROR字段
+  -设置输出文件名为文档名称
+2.如果没有文档ID，从kwargs中获取文件信息
+  -设置输出文件名为文件名
+  -设置输出file为文件对象
+3.回调进度100%，通知文件获取完成
+```
+
+```
+__init__（ParserParam类）：Parser组件参数类初始化，无输入参数
+1.调用父类ProcessParamBase的__init__方法
+2.定义allowed_output_format字典，指定各文件类型允许的输出格式
+3.定义setups字典，配置各文件类型的解析参数：
+  -pdf：解析方法（deepdoc/plain_text/tcadp_parser/vlm）、语言、后缀、输出格式
+  -spreadsheet：解析方法、输出格式、后缀
+  -word：后缀、输出格式
+  -text&markdown：后缀、输出格式
+  -slides：解析方法、后缀、输出格式
+  -image：解析方法、llm_id、语言、系统提示词、后缀、输出格式
+  -email：后缀、字段、输出格式
+  -audio：后缀、输出格式
+  -video：后缀、输出格式、提示词
+  -epub：后缀、输出格式
+```
+
+```
+check（ParserParam类）：Parser参数校验方法，无输入参数
+1.校验PDF配置：检查解析方法是否为空，如果是VLM方法检查语言是否配置，校验输出格式是否在允许列表中
+2.校验电子表格配置：检查输出格式是否在允许列表中
+3.校验Word文档配置：检查输出格式是否在允许列表中
+（还有更多校验逻辑，文件太长这里不一一列举）
+```
+
+```
+_invoke（Splitter类）：Splitter组件具体实现，输入参数{**kwargs}
+1.验证上游输入数据格式，验证失败则设置_ERROR
+2.处理分隔符，构建自定义分隔符正则表达式
+3.设置输出格式为chunks，回调开始进度
+4.如果上游输出格式是markdown/text/html：
+  -根据输出格式获取对应内容
+  -调用naive_merge方法进行文本分块
+  -如果有自定义分隔符，进一步按自定义模式分割
+  -设置输出chunks
+5.如果上游输出格式是json：
+  -处理表格和图片上下文
+  -调用naive_merge_with_images方法进行带图片的分块
+  -将图片转换为id存储
+  -设置输出chunks
+6.回调完成进度
+```
+
+```
+_embedding（Tokenizer类）：嵌入向量生成方法，输入参数{文件名，chunks列表}
+1.计算处理部分数量（全文检索+嵌入），初始化token计数
+2.获取嵌入模型配置：
+  -如果有知识库ID，优先使用知识库配置的嵌入模型
+  -否则使用租户默认嵌入模型
+3.初始化嵌入模型
+4.收集所有chunk的文本内容（处理HTML标签）
+5.生成文件名的嵌入向量
+6.批量生成文本内容的嵌入向量（按EMBEDDING_BATCH_SIZE分批）
+7.根据文件名权重合并文件名向量和文本向量
+8.将向量保存到每个chunk中
+9.返回处理后的chunks和token消耗总数
+```
+
+```
+_invoke（Tokenizer类）：Tokenizer组件具体实现，输入参数{**kwargs}
+1.清理chunks列表中的None值，验证上游输入数据
+2.设置输出格式为chunks，计算处理部分数量
+3.如果包含full_text检索方式：
+  -回调开始分词进度
+  -如果有chunks，遍历每个chunk：
+    -生成标题的token
+    -处理问题、关键词、摘要等字段的token
+    -每100个chunk回调一次进度
+  -如果上游是markdown/text/html格式，创建单个chunk并生成token
+  -如果上游是json格式，遍历每个chunk生成token
+  -回调分词完成进度
+4.如果包含embedding检索方式：
+  -回调开始嵌入进度
+  -调用_embedding方法生成向量
+  -保存token消耗数
+  -回调嵌入完成进度
+5.设置输出chunks
+```
+
+```
+_build_TOC（Extractor类）：生成目录方法，输入参数{docs文档列表}
+1.回调20%进度，开始生成目录
+2.按页码和位置对文档进行排序
+3.调用run_toc_from_text方法使用LLM生成目录
+4.遍历目录项，关联对应的文档ID
+5.如果生成了目录，创建一个特殊的目录chunk：
+  -设置doc_id、content_with_weight（目录JSON）
+  -设置toc_kwd为"toc"
+  -设置available_int为0
+  -生成唯一ID
+6.返回目录chunk或None
+```
+
+```
+_invoke（Extractor类）：Extractor组件具体实现，输入参数{**kwargs}
+1.设置输出格式为chunks，回调开始进度
+2.获取输入元素，查找chunks列表
+3.如果有chunks：
+  -如果目标字段是"toc"：
+    -为每个chunk设置doc_id和id
+    -调用_build_TOC生成目录
+    -将目录添加到chunks列表
+  -否则遍历每个chunk：
+    -构建LLM提示词
+    -调用LLM生成内容
+    -保存到目标字段
+    -定期回调进度
+4.如果没有chunks：
+  -直接调用LLM生成内容
+  -保存到目标字段
+5.设置输出chunks
+```
+
+```
+_invoke（HierarchicalMerger类）：HierarchicalMerger组件具体实现，输入参数{**kwargs}
+1.验证上游输入数据，验证失败则设置_ERROR
+2.设置输出格式为chunks，回调开始进度
+3.如果上游输出格式是markdown/text/html：
+  -获取对应内容并按行分割
+4.如果上游输出格式是chunks或json：
+  -收集文本行、位置标签和图片ID
+5.遍历每行文本，匹配层级正则表达式，确定每行的层级
+6.构建层级树结构：
+  -创建根节点
+  -遍历匹配结果，按层级构建树
+7.深度优先遍历树，生成所有路径
+8.根据路径合并文本：
+  -如果是纯文本格式，直接合并文本行
+  -如果是带图片格式，合并文本和图片
+  -将图片转换为id存储
+9.设置输出chunks，回调完成进度
+```
+
+```
+总结一下flow模块的执行流程：
+1.Pipeline初始化：接收DSL配置，初始化组件图
+2.Pipeline.run执行：
+  -从File组件开始（默认）
+  -依次调用每个组件的invoke方法
+  -前一个组件的输出作为后一个组件的输入
+3.每个组件执行：
+  -ProcessBase.invoke处理超时、日志、进度
+  -子类实现_invoke具体业务逻辑
+4.支持的主要组件：
+  -File：获取文件
+  -Parser：解析文档
+  -Splitter：文本分块
+  -Tokenizer：分词和嵌入
+  -Extractor：信息提取和目录生成
+  -HierarchicalMerger：层级合并
+
+疑惑：为什么Pipeline继承自Graph而不是直接实现？Graph类是从agent.canvas导入的，可能是为了复用agent模块的画布功能？
