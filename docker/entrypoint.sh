@@ -181,7 +181,12 @@ PY=python3
 # -----------------------------------------------------------------------------
 # Select Nginx Configuration based on API_PROXY_SCHEME
 # -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Select Nginx Configuration based on API_PROXY_SCHEME (FIXED: 修复文件不存在报错)
+# -----------------------------------------------------------------------------
 NGINX_CONF_DIR="/etc/nginx/conf.d"
+# Remove nginx default config to avoid conflict
+rm -f "$NGINX_CONF_DIR/default.conf"
 if [ -n "$API_PROXY_SCHEME" ]; then
     if [[ "${API_PROXY_SCHEME}" == "hybrid" ]]; then
         cp -f "$NGINX_CONF_DIR/ragflow.conf.hybrid" "$NGINX_CONF_DIR/ragflow.conf"
@@ -190,13 +195,24 @@ if [ -n "$API_PROXY_SCHEME" ]; then
         cp -f "$NGINX_CONF_DIR/ragflow.conf.golang" "$NGINX_CONF_DIR/ragflow.conf"
         echo "Applied nginx config: ragflow.conf.golang (default)"
     else
-        cp -f "$NGINX_CONF_DIR/ragflow.conf.python" "$NGINX_CONF_DIR/ragflow.conf"
-        echo "Applied nginx config: ragflow.conf.python"
+        # 修复：判断python配置文件是否存在，不存在则使用golang配置
+        if [ -f "$NGINX_CONF_DIR/ragflow.conf.python" ]; then
+            cp -f "$NGINX_CONF_DIR/ragflow.conf.python" "$NGINX_CONF_DIR/ragflow.conf"
+            echo "Applied nginx config: ragflow.conf.python"
+        else
+            cp -f "$NGINX_CONF_DIR/ragflow.conf.golang" "$NGINX_CONF_DIR/ragflow.conf"
+            echo "WARNING: ragflow.conf.python not found, use golang config instead"
+        fi
     fi
 else
-    # Default to python backend
-    cp -f "$NGINX_CONF_DIR/ragflow.conf.python" "$NGINX_CONF_DIR/ragflow.conf"
-    echo "Default: applied nginx config: ragflow.conf.python"
+    # Default：修复文件不存在问题
+    if [ -f "$NGINX_CONF_DIR/ragflow.conf.python" ]; then
+        cp -f "$NGINX_CONF_DIR/ragflow.conf.python" "$NGINX_CONF_DIR/ragflow.conf"
+        echo "Default: applied nginx config: ragflow.conf.python"
+    else
+        cp -f "$NGINX_CONF_DIR/ragflow.conf.golang" "$NGINX_CONF_DIR/ragflow.conf"
+        echo "Default: ragflow.conf.python not found, use golang config"
+    fi
 fi
 
 # -----------------------------------------------------------------------------
