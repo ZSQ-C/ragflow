@@ -4,7 +4,7 @@
 > **项目定位**：企业级开源 RAG 引擎，GitHub 30k+ Stars
 > **核心价值**：基于深度文档理解的检索增强生成 + 可编排的 Agent 工作流
 
----
+***
 
 ## 📑 目录
 
@@ -16,7 +16,7 @@
 - [六、简历项目描述（可直接使用）](#六简历项目描述可直接使用)
 - [七、面试高频问题与深度回答](#七面试高频问题与深度回答)
 
----
+***
 
 ## 一、项目概述与面试定位
 
@@ -62,7 +62,7 @@
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
----
+***
 
 ## 二、RAG 核心技术深度解析
 
@@ -157,9 +157,10 @@ def rerank(self, sres, query, tkweight=0.3, vtweight=0.7):
 ```
 
 **面试追问**：为什么向量权重70%、词权重30%？
+
 > RAG 场景下，语义相关性比关键词精确匹配更重要。用户问"怎么配置系统"，文档中写的是"系统设置指南"，关键词匹配不到，但向量相似度能捕捉语义关系。
 
----
+***
 
 ### 2.2 查询处理器 (`rag/nlp/query.py`)
 
@@ -186,15 +187,17 @@ class FulltextQueryer(QueryBase):
 #### 2.2.2 `question()` — 查询表达式构建
 
 **英文查询**（L58-L92）：
+
 - tokenize → 词权重计算 → 同义词扩展 → 生成加权OR表达式
 - 支持 bigram 短语增强（相邻词组合）
 
 **中文查询**（L94-L168）：
-- 细粒度分词（fine_grained_tokenize）产1~5-grams
+
+- 细粒度分词（fine\_grained\_tokenize）产1\~5-grams
 - 同义词扩展 + 子词扩展
 - 构建双层查询：OR逻辑（宽松匹配）+ PHRASE逻辑（严格匹配）
 
----
+***
 
 ### 2.3 词权重计算 (`rag/nlp/term_weight.py`)
 
@@ -223,13 +226,14 @@ def weights(self, tokens, prepro):
 
 **面试亮点**：通过 NLP 词法分析（命名实体 + 词性标注）为查询词动态加权，使"公司名"、"地名"等实体获得3倍加权，虚词降权至0.3倍。
 
----
+***
 
 ### 2.4 重排序模型层 (`rag/llm/rerank_model.py`)
 
 **支持 16 种重排器**：Jina、CoHere、Voyage、通义千问、百度千帆、HuggingFace、NVIDIA、XInference（本地化）、SiliconFlow、GPUStack 等。
 
 所有实现遵循统一接口：
+
 ```python
 class Base:
     def similarity(self, query: str, texts: list[str]) -> list[tuple[int, float]]:
@@ -237,13 +241,15 @@ class Base:
 ```
 
 **面试追问**：为什么支持这么多重排器？
+
 > 满足不同企业需求：
+>
 > - **合规性**：金融/政务企业需要用国内模型（通义、百度）
 > - **隐私性**：XInference 本地化部署，数据不出域
 > - **性价比**：GPUStack/SiliconFlow 降低 GPU 成本
 > - **覆盖性**：Jina/Voyage/CoHere 在不同语言上各有优势
 
----
+***
 
 ### 2.5 引用溯源机制 (`rag/nlp/search.py` + `dialog_service.py`)
 
@@ -283,7 +289,7 @@ kbinfos = {
 }
 ```
 
----
+***
 
 ## 三、Agent 核心技术深度解析
 
@@ -357,7 +363,7 @@ class Graph:
 
 **位置**：`agent/canvas.py` L283-L852
 
-**核心方法 `run()` 的执行流程**（L375-L667）：
+**核心方法** **`run()`** **的执行流程**（L375-L667）：
 
 ```
 阶段1: 初始化
@@ -390,17 +396,17 @@ class Graph:
 
 **事件系统（yield 的字典类型）**：
 
-| 事件 | 数据内容 | 作用 |
-|------|----------|------|
-| `workflow_started` | `{inputs}` | 初始化前端状态 |
-| `node_started` | `{component_id, component_name, thoughts}` | 节点高亮 |
-| `node_finished` | `{inputs, outputs, component_id, error, elapsed_time}` | 节点完成标记 |
-| `message` | `{content, audio_binary, start_to_think, end_to_think}` | 流式输出 |
-| `message_end` | `{status, attachment, reference}` | 消息结束 |
-| `user_inputs` | `{inputs, tips}` | 等待用户交互 |
-| `workflow_finished` | `{inputs, outputs, elapsed_time}` | 工作流完成 |
+| 事件                  | 数据内容                                                    | 作用      |
+| ------------------- | ------------------------------------------------------- | ------- |
+| `workflow_started`  | `{inputs}`                                              | 初始化前端状态 |
+| `node_started`      | `{component_id, component_name, thoughts}`              | 节点高亮    |
+| `node_finished`     | `{inputs, outputs, component_id, error, elapsed_time}`  | 节点完成标记  |
+| `message`           | `{content, audio_binary, start_to_think, end_to_think}` | 流式输出    |
+| `message_end`       | `{status, attachment, reference}`                       | 消息结束    |
+| `user_inputs`       | `{inputs, tips}`                                        | 等待用户交互  |
+| `workflow_finished` | `{inputs, outputs, elapsed_time}`                       | 工作流完成   |
 
----
+***
 
 ### 3.2 Agent 智能体 (`agent/component/agent_with_tools.py`)
 
@@ -457,7 +463,7 @@ class Agent(LLM, ToolBase):
 步骤9: set_output("content", ans)
 ```
 
----
+***
 
 ### 3.3 工具调用完整链路 (`agent/tools/base.py`)
 
@@ -486,6 +492,7 @@ class LLMToolPluginCallSession(ToolCallSession):
 ```
 
 **完整工具调用链路**：
+
 ```
 User → Canvas.run() → Agent._invoke_async()
   → chat_mdl (LLM推理 + tool_choice)
@@ -499,7 +506,7 @@ User → Canvas.run() → Agent._invoke_async()
 → Message 组件流式输出到前端
 ```
 
----
+***
 
 ### 3.4 Retrieval 检索工具 (`agent/tools/retrieval.py`)
 
@@ -521,7 +528,7 @@ _retrieve_kb() 完整流程：
   Step 12: canvas.add_reference() 存储引用 + kb_prompt() 格式化输出
 ```
 
----
+***
 
 ### 3.5 CodeExec 代码沙箱 (`agent/tools/code_exec.py`)
 
@@ -536,53 +543,54 @@ _execute_code()流程：
 ```
 
 **沙箱 Provider 抽象**（`agent/sandbox/providers/base.py`）：
+
 - `SelfManagedProvider`：自托管 Python/NodeJS 容器
 - `AliyunCodeInterpreterProvider`：阿里云函数计算
 - `E2BProvider`：第三方沙箱服务
 
----
+***
 
 ### 3.6 完整组件列表（18种）
 
-| 组件 | 文件 | 功能 |
-|------|------|------|
-| Begin | `begin.py` | 工作流入口，处理文件上传 |
-| Message | `message.py` | 流式输出消息 + 格式转换（MD/HTML/PDF/DOCX/XLSX） |
-| Agent | `agent_with_tools.py` | 智能体：支持多工具调用、MCP、structured output |
-| Retrieval | `retrieval.py` | 知识库检索 + 记忆检索 |
-| CodeExec | `code_exec.py` | 代码沙箱执行（Python/NodeJS） |
-| Crawler | `crawler.py` | 网页爬取 |
-| Tavily | `tavily.py` | 网页搜索（Tavily API） |
-| Switch | `switch.py` | 条件分支（8种运算符） |
-| Categorize | `categorize.py` | LLM 意图分类路由 |
-| Loop | `loop.py` | 循环控制（最大循环数+终止条件） |
-| Iteration | `iteration.py` | 数组迭代（类似 foreach） |
-| Invoke | `invoke.py` | HTTP API 调用 |
-| Template | `template.py` | Jinja2 模板渲染 |
-| Generate | `generate.py` | 纯 LLM 生成 |
-| SelfCorrection | `self_correction.py` | 自校正（生成→校验→重试） |
-| VariableAggregator | `variable_aggregator.py` | 变量聚合 |
-| QuestionLoader | `question_loader.py` | 批量问答加载 |
-| UserFillUp | `fillup.py` | 暂停等待用户输入 |
+| 组件                 | 文件                       | 功能                                   |
+| ------------------ | ------------------------ | ------------------------------------ |
+| Begin              | `begin.py`               | 工作流入口，处理文件上传                         |
+| Message            | `message.py`             | 流式输出消息 + 格式转换（MD/HTML/PDF/DOCX/XLSX） |
+| Agent              | `agent_with_tools.py`    | 智能体：支持多工具调用、MCP、structured output    |
+| Retrieval          | `retrieval.py`           | 知识库检索 + 记忆检索                         |
+| CodeExec           | `code_exec.py`           | 代码沙箱执行（Python/NodeJS）                |
+| Crawler            | `crawler.py`             | 网页爬取                                 |
+| Tavily             | `tavily.py`              | 网页搜索（Tavily API）                     |
+| Switch             | `switch.py`              | 条件分支（8种运算符）                          |
+| Categorize         | `categorize.py`          | LLM 意图分类路由                           |
+| Loop               | `loop.py`                | 循环控制（最大循环数+终止条件）                     |
+| Iteration          | `iteration.py`           | 数组迭代（类似 foreach）                     |
+| Invoke             | `invoke.py`              | HTTP API 调用                          |
+| Template           | `template.py`            | Jinja2 模板渲染                          |
+| Generate           | `generate.py`            | 纯 LLM 生成                             |
+| SelfCorrection     | `self_correction.py`     | 自校正（生成→校验→重试）                        |
+| VariableAggregator | `variable_aggregator.py` | 变量聚合                                 |
+| QuestionLoader     | `question_loader.py`     | 批量问答加载                               |
+| UserFillUp         | `fillup.py`              | 暂停等待用户输入                             |
 
----
+***
 
 ## 四、DeepDoc 文档解析管道
 
 ### 4.1 解析器矩阵（11种格式 × 5种PDF引擎）
 
-| 格式 | 解析器 | 核心技术 |
-|------|--------|----------|
-| **PDF** | PdfParser / MinerU / Docling / PaddleOCR / TCADP | OCR + 布局 + 表格 + 视觉增强 |
-| **DOCX** | DocxParser | XML元素树遍历 + 图片提取 |
-| **Excel** | ExcelParser | 多引擎加载（openpyxl/pandas/calamine）+ 二分探测 |
-| **HTML** | HtmlParser | BeautifulSoup + 递归DOM遍历 |
-| **Markdown** | MarkdownParser | 结构元素提取 + 表格分离 |
-| **EPUB** | EpubParser | OPF解析 → XHTML → HTML分块 |
-| **JSON** | JsonParser | 递归DFS分块 + JSONL检测 |
-| **TXT** | TxtParser | 编码检测（80+种） + 分隔符分块 |
-| **PPT** | PptParser | 幻灯片排序 + 形状递归提取 |
-| **图片** | VisionParser | Vision LLM 自然语言描述 |
+| 格式           | 解析器                                              | 核心技术                                  |
+| ------------ | ------------------------------------------------ | ------------------------------------- |
+| **PDF**      | PdfParser / MinerU / Docling / PaddleOCR / TCADP | OCR + 布局 + 表格 + 视觉增强                  |
+| **DOCX**     | DocxParser                                       | XML元素树遍历 + 图片提取                       |
+| **Excel**    | ExcelParser                                      | 多引擎加载（openpyxl/pandas/calamine）+ 二分探测 |
+| **HTML**     | HtmlParser                                       | BeautifulSoup + 递归DOM遍历               |
+| **Markdown** | MarkdownParser                                   | 结构元素提取 + 表格分离                         |
+| **EPUB**     | EpubParser                                       | OPF解析 → XHTML → HTML分块                |
+| **JSON**     | JsonParser                                       | 递归DFS分块 + JSONL检测                     |
+| **TXT**      | TxtParser                                        | 编码检测（80+种） + 分隔符分块                    |
+| **PPT**      | PptParser                                        | 幻灯片排序 + 形状递归提取                        |
+| **图片**       | VisionParser                                     | Vision LLM 自然语言描述                     |
 
 ### 4.2 PDF 解析深度流程
 
@@ -606,19 +614,22 @@ PDF 文件
 ### 4.3 分块策略（`rag/app/naive.py` chunk函数）
 
 **通用策略**：
+
 - 分隔符切分 + Token 限制合并（默认512 tokens）
-- 重叠分块（overlapped_percent，默认0%）
+- 重叠分块（overlapped\_percent，默认0%）
 - 自定义子分隔符支持（backtick包裹模式）
 
 **DOCX 特殊策略**（`naive_merge_docx`）：
+
 - 区分 text/image/table 类型 chunk
-- 图片/表格附加上下文（context_above/context_below）
+- 图片/表格附加上下文（context\_above/context\_below）
 - 图片/表格不参与文本合并（独立保留）
 
 **JSON 特殊策略**：
-- 递归 DFS 分块（min_chunk_size切分，max_chunk_size截断）
 
----
+- 递归 DFS 分块（min\_chunk\_size切分，max\_chunk\_size截断）
+
+***
 
 ## 五、简历亮点提炼
 
@@ -627,15 +638,17 @@ PDF 文件
 > 实现了全文检索（倒排索引+词权重）与向量检索（Embedding+余弦相似度）的加权融合（0.05:0.95），结合二次降级检索兜底，召回率从65%提升至89%。
 
 **面试回答要点**：
+
 - 讲清楚为什么需要两路（精确匹配 vs 语义理解）
 - 讲清楚权重配比的考量（RAG更侧重语义）
-- 讲清楚降级策略（min_match从0.3降到0.1）
+- 讲清楚降级策略（min\_match从0.3降到0.1）
 
 ### 亮点2：16种重排模型的可插拔架构
 
 > 设计统一重排接口抽象，支持 Jina/CoHere/Voyage/通义/百度/XInference 等16种重排服务的热插拔切换，满足金融/政务等企业合规与隐私需求。
 
 **面试回答要点**：
+
 - 策略模式设计
 - 不同场景的选型理由（合规/隐私/性价比/语言覆盖）
 
@@ -644,17 +657,19 @@ PDF 文件
 > 基于 JSON DSL 实现可视化工作流编排引擎，支持18种组件（Agent/Retrieval/CodeExec/Switch/Loop/Iteration等）、5路并发执行、变量依赖解析、条件分支路由和工具调用（Function Calling + MCP）。
 
 **面试回答要点**：
+
 - DSL的设计思路（JSON可序列化、可视化友好）
-- 组件间变量引用机制（{component_id@variable_name}）
+- 组件间变量引用机制（{component\_id\@variable\_name}）
 - 并发执行的控制（Semaphore + 依赖检测）
-- 错误处理（exception_handler → goto/default_value）
+- 错误处理（exception\_handler → goto/default\_value）
 
 ### 亮点4：工具调用系统
 
 > 实现完整的 OpenAI Function Calling 工具调用链路，支持异步/同步工具自动适配、MCP 协议扩展、工具调用日志追踪、结果自动注入 LLM 上下文、最大轮次控制。
 
 **面试回答要点**：
-- 同步工具的异步化处理（thread_pool_exec）
+
+- 同步工具的异步化处理（thread\_pool\_exec）
 - MCP协议的意义（标准化工具接口）
 - 工具去重（索引前缀防重名）
 
@@ -663,6 +678,7 @@ PDF 文件
 > 通过双重保障机制（Prompt引导+后处理强制插入）实现答案引用溯源，混合相似度（词权重30%+向量70%）精确匹配引用位置，支持文档/页码级别的溯源。
 
 **面试回答要点**：
+
 - 为什么需要双重保障（LLM不一定听话）
 - 混合相似度的设计思路
 - 去重逻辑（过滤重叠的低分引用）
@@ -672,17 +688,18 @@ PDF 文件
 > 支持11种文档格式（PDF/DOCX/Excel/HTML/Markdown/EPUB/JSON/TXT/PPT/图片），集成5种PDF解析引擎（自研ONNX OCR/MinerU/Docling/PaddleOCR/TCADP），实现从OCR到布局识别再到表格结构提取的完整视觉管道。
 
 **面试回答要点**：
+
 - 解析器选择的策略模式
 - PDF解析的技术难度（乱码检测、旋转纠正、列检测）
 - Vision LLM 增强的价值
 
----
+***
 
 ## 六、简历项目描述（可直接使用）
 
 ### 6.1 项目经历格式A（适合简历项目栏）
 
----
+***
 
 **RAGFlow — 企业级开源RAG引擎** | 2024.xx - 至今
 *GitHub 30k+ Stars | Python + React + Docker | 开源项目贡献*
@@ -690,24 +707,24 @@ PDF 文件
 - **RAG 检索精排系统**：实现混合检索引擎（全文倒排索引 × 向量语义检索，加权融合0.05:0.95），构建多因子重排序（词权重30%+向量相似度70%+标签加权），结合二次降级检索兜底策略，**召回率从65%提升至89%**，支持 ES/Infinity/OceanBase 三种向量数据库后端
 - **文档解析管道**：设计多格式文档解析框架，支持 11 种文件格式（PDF/DOCX/Excel/PPT 等），集成 5 种 PDF 解析引擎（自研 ONNX OCR/MinerU/Docling），实现从 OCR 检测→布局分类→表格结构识别→智能分块的完整视觉管道
 - **引用溯源系统**：设计 Prompt 引导 + 后处理强制插入的双重引用机制，基于混合语义匹配（词权重30%+向量余弦70%）实现答案与文档块的精确定位，召回来源文本并插入页面级引用标记
-- **查询优化**：实现词权重动态计算（IDF×NER系数×词性系数）、同义词三级查找（自定义词典→WordNet→Redis动态添加）、细粒度分词（1~5-grams），多字段分层加权（标题×10、关键词×30、正文×2）
+- **查询优化**：实现词权重动态计算（IDF×NER系数×词性系数）、同义词三级查找（自定义词典→WordNet→Redis动态添加）、细粒度分词（1\~5-grams），多字段分层加权（标题×10、关键词×30、正文×2）
 
----
+***
 
 ### 6.2 项目经历格式B（适合Agent方向）
 
----
+***
 
 **RAGFlow Agent — 可编排智能体工作流引擎** | 2024.xx - 至今
 *Python 异步架构 | LLM + Tool Call + DSL | 开源项目核心模块*
 
 - **Agent 编排引擎**：基于 JSON DSL 实现可视化工作流编排（Graph + Canvas 双层架构），支持 18 种组件类型（Agent/Retrieval/CodeExec/Switch/Loop/Iteration 等）、5 路并发执行（asyncio.Semaphore）、变量依赖解析和条件分支路由
-- **工具调用系统**：实现 OpenAI Function Calling 完整工具调用链路，支持同步异步工具自动适配（thread_pool_exec）、MCP 协议扩展、工具调用日志追踪（Redis）、结果自动注入 LLM 上下文，最大轮次控制防无限循环
+- **工具调用系统**：实现 OpenAI Function Calling 完整工具调用链路，支持同步异步工具自动适配（thread\_pool\_exec）、MCP 协议扩展、工具调用日志追踪（Redis）、结果自动注入 LLM 上下文，最大轮次控制防无限循环
 - **代码沙箱**：设计可插拔沙箱 Provider 体系（自托管容器/阿里云函数计算/E2B），支持 Python/NodeJS 安全执行 + 资源隔离 + Artifact 自动上传
-- **流式事件系统**：设计 7 种实时事件（workflow_started/node_started/node_finished/message/message_end/user_inputs/workflow_finished），SSE 协议推送，支持前端可视化实时状态更新
-- **RAG 检索引擎集成**：Agent 工具中内置知识库检索工具，支持多轮 Tool Call 中的上下文累积、动态 KB 选择、元数据过滤（manual/auto/semi_auto）、跨语言查询扩展等高级检索能力
+- **流式事件系统**：设计 7 种实时事件（workflow\_started/node\_started/node\_finished/message/message\_end/user\_inputs/workflow\_finished），SSE 协议推送，支持前端可视化实时状态更新
+- **RAG 检索引擎集成**：Agent 工具中内置知识库检索工具，支持多轮 Tool Call 中的上下文累积、动态 KB 选择、元数据过滤（manual/auto/semi\_auto）、跨语言查询扩展等高级检索能力
 
----
+***
 
 ### 6.3 技能描述（适合技能栏）
 
@@ -721,7 +738,7 @@ PDF 文件
 - 工程能力：异步编程 | 流式响应 | 并发控制 | 缓存策略 | 多租户隔离
 ```
 
----
+***
 
 ## 七、面试高频问题与深度回答
 
@@ -732,13 +749,16 @@ PDF 文件
 **回答框架**（3层递进）：
 
 **第一层：离线索引（文档入库）**
+
 > 文档上传 → 格式检测（ext） → 选择解析器（PdfParser/DocxParser/...） → OCR检测+布局识别+表格提取 → 文本分块（分隔符+token限制，默认512） → Embedding向量化 → 存储到ES/Infinity
 
 **第二层：在线检索（用户提问）**
-> 用户提问 → 查询优化（多轮合并/跨语言/关键词提取） → 混合检索（全文matchText + 向量matchDense，weighted_sum融合0.05:0.95） → 降级重试 → 重排序（本地多因子+外部Rerank模型） → 阈值过滤 → 结果聚合
+
+> 用户提问 → 查询优化（多轮合并/跨语言/关键词提取） → 混合检索（全文matchText + 向量matchDense，weighted\_sum融合0.05:0.95） → 降级重试 → 重排序（本地多因子+外部Rerank模型） → 阈值过滤 → 结果聚合
 
 **第三层：生成回答**
-> 构建Prompt（系统提示词+引用要求+知识块+对话历史） → Token裁剪（message_fit_in） → LLM流式生成 → 引用插入后处理 → SSE返回
+
+> 构建Prompt（系统提示词+引用要求+知识块+对话历史） → Token裁剪（message\_fit\_in） → LLM流式生成 → 引用插入后处理 → SSE返回
 
 #### Q2: 为什么选择混合检索而不是纯向量检索？
 
@@ -752,33 +772,39 @@ PDF 文件
 > 通过 `full_question()` 函数，将多轮对话历史发送给 LLM，让 LLM 将依赖上下文的问题重构为独立问题。
 >
 > **示例**：
+>
 > - 历史：Q: "什么是RAG？" A: "RAG是检索增强生成..."
 > - 当前：Q: "它有什么优势？"
 > - 重构后：Q: "RAG（检索增强生成）技术相比纯LLM有哪些优势和特点？"
 >
 > 这个策略大大提升了后续检索的准确率。
 
----
+***
 
 ### 7.2 文档解析
 
 #### Q4: PDF 解析的主要技术挑战是什么？
 
 > **挑战1：乱码检测**
+>
 > - 使用三重检测：（1）PUA字符占比 （2）CID模式 `(cid:\d+)` （3）字体编码检测
 > - 乱码超过阈值自动触发 OCR 重识别
 >
 > **挑战2：表格结构识别**
+>
 > - 自动旋转检测：4个角度OCR置信度评估，选最佳角度
 > - spanning cell检测：跨行跨列单元格识别
 >
 > **挑战3：分栏识别**
+>
 > - KMeans聚类 + 轮廓系数自动检测列数
 >
 > **挑战4：表格/图片与文字的关联**
+>
 > - 位置相邻检测 → context 附加上下文（前后句子）
 >
 > **挑战5：5种引擎热切换**
+>
 > - 策略模式，只需实现统一接口
 > - ONNX自研（免费无限制）、MinerU（最高质量）、Docling（IBM开源）、PaddleOCR（中文优化）、TCADP（腾讯云PaaS）
 
@@ -787,6 +813,7 @@ PDF 文件
 > **核心公式**：分隔符切分 + Token限制合并 + 上下文保留
 >
 > **通用策略**：
+>
 > ```
 > 分隔符：\n!?。；！？（默认）
 > 块大上限：chunk_token_num（默认512 tokens）
@@ -794,14 +821,16 @@ PDF 文件
 > ```
 >
 > **DOCX特殊处理**：
+>
 > - 区分 text/image/table 三种类型
 > - 图片/表格保留为独立chunk，不参与文本合并
-> - 自动附加周围文本作为上下文（context_above/context_below）
+> - 自动附加周围文本作为上下文（context\_above/context\_below）
 >
 > **JSON特殊处理**：
-> - 递归DFS分块，min_chunk_size 切分、max_chunk_size 截断
+>
+> - 递归DFS分块，min\_chunk\_size 切分、max\_chunk\_size 截断
 
----
+***
 
 ### 7.3 Agent 实现
 
@@ -810,15 +839,17 @@ PDF 文件
 > **架构**：JSON DSL 定义工作流 → Graph 反序列化 → Canvas 执行编排 → 流式事件推送
 >
 > **核心设计原则**：
+>
 > 1. **可视化优先**：DSL 用 JSON，直接对应画布上的节点和连线
 > 2. **并发控制**：5路并行，使用 asyncio.Semaphore 限制
 > 3. **依赖解析**：变量引用 `{component_id@variable_name}` 自动检测上游是否完成
-> 4. **错误隔离**：每个组件独立错误处理（goto跳转/default_value兜底）
+> 4. **错误隔离**：每个组件独立错误处理（goto跳转/default\_value兜底）
 > 5. **事件驱动**：7种事件类型通过 async generator yield 流式推送
 
 #### Q7: 你们的 Tool Call 是如何实现的？
 
 > **完整链路**：
+>
 > ```
 > Agent._invoke_async()
 >   → chat_mdl.bind_tools() 绑定 OpenAI Function Calling 格式工具
@@ -833,6 +864,7 @@ PDF 文件
 > ```
 >
 > **关键设计**：
+>
 > - 同步工具的异步化：所有同步调用通过 `thread_pool_exec` 在线程池执行
 > - MCP 支持：兼容第三方工具的标准化接口
 > - 工具去重：索引前缀 `{tool_name}_{idx}` 解决多实例冲突
@@ -842,29 +874,31 @@ PDF 文件
 
 > **Loop 循环**：维护循环变量和终止条件，Canvas 在每次循环迭代后检查 `end()` 条件（最大次数/条件满足），满足则退出到 downstream，否则继续执行 LoopItem。
 >
-> **Iteration 迭代**：接收数组变量（items_ref），对每个元素创建独立的执行上下文（item变量），内部子组件可以访问当前迭代元素。本质是 foreach 语义。
+> **Iteration 迭代**：接收数组变量（items\_ref），对每个元素创建独立的执行上下文（item变量），内部子组件可以访问当前迭代元素。本质是 foreach 语义。
 >
 > **在 Canvas.path 中的体现**：Loop/Iteration 进入时 `_append_path(start_item)`，退出时回退到父组件 downstream。
 
----
+***
 
 ### 7.4 向量数据库
 
 #### Q9: 为什么选择 Elasticsearch/Infinity 而不是 Milvus/Pinecone？
 
 > **ES 选型理由**：
+>
 > - 混合检索原生支持（全文+向量同库）
 > - 生态成熟（运维工具、监控、社区）
 > - 企业已有部署（降低引入成本）
 >
 > **Infinity 选型理由**：
+>
 > - 高性能C++引擎
 > - 原生支持加权融合（FUSION语法）
 > - 更低内存占用
 >
 > **架构设计**：抽象层 `DocStoreConnection` + FusionExpr ，三种后端（ES/Infinity/OceanBase）统一接口切换。
 
----
+***
 
 ### 7.5 性能与工程
 
@@ -880,13 +914,13 @@ PDF 文件
 >
 > **瓶颈3：检索延迟**
 > → HNSW 索引（ef参数调优）
-> → 先粗排（topK=1024）后精排（RERANK_LIMIT=64）
+> → 先粗排（topK=1024）后精排（RERANK\_LIMIT=64）
 >
 > **瓶颈4：Token 溢出**
-> → message_fit_in 裁剪
-> → 知识内容截断到 max_tokens
+> → message\_fit\_in 裁剪
+> → 知识内容截断到 max\_tokens
 
----
+***
 
 ### 7.6 开放性问题
 
@@ -895,10 +929,10 @@ PDF 文件
 > 1. **Graph RAG**：基于知识图谱的实体关系推理（当前只有基础的KG检索）
 > 2. **Self-RAG**：LLM 自我反思是否检索足够，不够则触发二次检索
 > 3. **Hypothetical Document Embeddings (HyDE)**：先让LLM生成假设答案，用假设答案做向量检索（解决query-document语义gap）
-> 4. **Small-to-Big 检索**：检索小chunk，返回大chunk（当前有 retrieval_by_children 但不够灵活）
+> 4. **Small-to-Big 检索**：检索小chunk，返回大chunk（当前有 retrieval\_by\_children 但不够灵活）
 > 5. **多Agent协作**：当前Agent是单Agent+工具，可以扩展为多Agent辩论/投票/分工模式
 
----
+***
 
 #### Q12: 你在这个项目中遇到的最难的技术问题是什么？如何解决的？
 
@@ -907,11 +941,13 @@ PDF 文件
 > **背景**：企业上传的PDF质量参差不齐，部分中文PDF使用内嵌字体（subset字体），编码映射错乱，导致 pdfplumber 直接提取到乱码字符。
 >
 > **分析**：乱码主要有三种形态：
+>
 > 1. PUA区字符（U+E000-F8FF），不是真实文字
 > 2. CID模式 `(cid:数字)`，字体未解码
 > 3. 字体名含 "subset" 前缀，内嵌子集字体
 >
 > **解决方案**：
+>
 > 1. 实现三重乱码检测器（PUA占比 + CID匹配 + 字体名检测）
 > 2. 自适应阈值：`max(15, len*0.2)` 到 `min(35, len*0.3)`
 > 3. 超过阈值自动降级为 ONNX OCR 重新识别
@@ -919,68 +955,69 @@ PDF 文件
 >
 > **结果**：乱码文档的正确识别率从 30% 提升至 95%+。
 
----
+***
 
----
+***
 
 ## 八、附录：核心源码索引
 
 ### 8.1 RAG 模块
 
-| 文件 | 核心类/函数 | 行号 | 功能 |
-|------|------------|------|------|
-| `rag/nlp/search.py` | `Dealer.search()` | L74-L171 | 混合检索核心 |
-| `rag/nlp/search.py` | `Dealer.retrieval()` | L344-L412 | 检索精排全链路 |
-| `rag/nlp/search.py` | `Dealer.rerank()` | L234-L280 | 本地多因子重排序 |
-| `rag/nlp/search.py` | `Dealer.insert_citations()` | L177-L230 | 引用插入后处理 |
-| `rag/nlp/query.py` | `FulltextQueryer.question()` | L41-L168 | 全文查询构造 |
-| `rag/nlp/term_weight.py` | `Dealer.weights()` | L1-L247 | 词权重计算（IDF×NER×POS） |
-| `rag/nlp/synonym.py` | `Dealer.lookup()` | L35-L86 | 三级同义词查找 |
-| `rag/llm/rerank_model.py` | `Base.similarity()` | L1-L552 | 16种重排器抽象 |
+| 文件                        | 核心类/函数                       | 行号        | 功能                 |
+| ------------------------- | ---------------------------- | --------- | ------------------ |
+| `rag/nlp/search.py`       | `Dealer.search()`            | L74-L171  | 混合检索核心             |
+| `rag/nlp/search.py`       | `Dealer.retrieval()`         | L344-L412 | 检索精排全链路            |
+| `rag/nlp/search.py`       | `Dealer.rerank()`            | L234-L280 | 本地多因子重排序           |
+| `rag/nlp/search.py`       | `Dealer.insert_citations()`  | L177-L230 | 引用插入后处理            |
+| `rag/nlp/query.py`        | `FulltextQueryer.question()` | L41-L168  | 全文查询构造             |
+| `rag/nlp/term_weight.py`  | `Dealer.weights()`           | L1-L247   | 词权重计算（IDF×NER×POS） |
+| `rag/nlp/synonym.py`      | `Dealer.lookup()`            | L35-L86   | 三级同义词查找            |
+| `rag/llm/rerank_model.py` | `Base.similarity()`          | L1-L552   | 16种重排器抽象           |
 
 ### 8.2 Agent 模块
 
-| 文件 | 核心类/函数 | 行号 | 功能 |
-|------|------------|------|------|
-| `agent/canvas.py` | `Graph.load()` | L94-L130 | DSL反序列化 |
-| `agent/canvas.py` | `Canvas.run()` | L375-L667 | Agent编排执行 |
-| `agent/canvas.py` | `Canvas._run_batch()` | L435-L482 | 批量并行执行 |
-| `agent/component/agent_with_tools.py` | `Agent.__init__()` | L76-L147 | 工具加载绑定 |
-| `agent/component/agent_with_tools.py` | `Agent._invoke_async()` | L188-L260 | Agent主执行 |
-| `agent/tools/base.py` | `LLMToolPluginCallSession.tool_call_async()` | L50-L77 | Tool Call会话 |
-| `agent/tools/retrieval.py` | `Retrieval._retrieve_kb()` | L88-L259 | 知识库检索工具 |
-| `agent/tools/code_exec.py` | `CodeExec._execute_code()` | L170-L240 | 代码沙箱执行 |
-| `agent/sandbox/providers/base.py` | `SandboxProvider` | L1-L212 | 沙箱Provider抽象 |
-| `agent/component/base.py` | `ComponentBase.invoke()` | L407-L419 | 同步调用入口 |
-| `agent/component/base.py` | `ComponentBase.invoke_async()` | L421-L451 | 异步调用入口 |
-| `agent/component/base.py` | `ComponentBase.get_input()` | L478-L517 | 变量解析核心 |
-| `agent/component/message.py` | `Message._invoke()` | L182-L250 | 流式输出+格式转换 |
-| `agent/component/categorize.py` | `Categorize._invoke_async()` | L109-L165 | LLM意图分类 |
-| `agent/component/switch.py` | `Switch._invoke()` | L65-L108 | 条件分支判断 |
+| 文件                                    | 核心类/函数                                       | 行号        | 功能           |
+| ------------------------------------- | -------------------------------------------- | --------- | ------------ |
+| `agent/canvas.py`                     | `Graph.load()`                               | L94-L130  | DSL反序列化      |
+| `agent/canvas.py`                     | `Canvas.run()`                               | L375-L667 | Agent编排执行    |
+| `agent/canvas.py`                     | `Canvas._run_batch()`                        | L435-L482 | 批量并行执行       |
+| `agent/component/agent_with_tools.py` | `Agent.__init__()`                           | L76-L147  | 工具加载绑定       |
+| `agent/component/agent_with_tools.py` | `Agent._invoke_async()`                      | L188-L260 | Agent主执行     |
+| `agent/tools/base.py`                 | `LLMToolPluginCallSession.tool_call_async()` | L50-L77   | Tool Call会话  |
+| `agent/tools/retrieval.py`            | `Retrieval._retrieve_kb()`                   | L88-L259  | 知识库检索工具      |
+| `agent/tools/code_exec.py`            | `CodeExec._execute_code()`                   | L170-L240 | 代码沙箱执行       |
+| `agent/sandbox/providers/base.py`     | `SandboxProvider`                            | L1-L212   | 沙箱Provider抽象 |
+| `agent/component/base.py`             | `ComponentBase.invoke()`                     | L407-L419 | 同步调用入口       |
+| `agent/component/base.py`             | `ComponentBase.invoke_async()`               | L421-L451 | 异步调用入口       |
+| `agent/component/base.py`             | `ComponentBase.get_input()`                  | L478-L517 | 变量解析核心       |
+| `agent/component/message.py`          | `Message._invoke()`                          | L182-L250 | 流式输出+格式转换    |
+| `agent/component/categorize.py`       | `Categorize._invoke_async()`                 | L109-L165 | LLM意图分类      |
+| `agent/component/switch.py`           | `Switch._invoke()`                           | L65-L108  | 条件分支判断       |
 
 ### 8.3 文档解析模块
 
-| 文件 | 核心类/函数 | 行号 | 功能 |
-|------|------------|------|------|
-| `rag/app/naive.py` | `chunk()` | L729-L1078 | 文档分块总入口 |
-| `rag/app/naive.py` | `by_deepdoc()` | L86-L98 | PDF解析入口 |
-| `rag/nlp/__init__.py` | `naive_merge()` | L1070-L1126 | 基础文本合并 |
-| `rag/nlp/__init__.py` | `naive_merge_docx()` | L1463-L1485 | DOCX专用合并 |
-| `rag/nlp/__init__.py` | `tokenize_chunks()` | L302-L327 | Chunk Token化 |
-| `deepdoc/parser/pdf_parser.py` | `RAGFlowPdfParser` | L1-L2057 | PDF完整解析 |
-| `deepdoc/parser/docx_parser.py` | `RAGFlowDocxParser` | L1-L450+ | DOCX解析 |
-| `deepdoc/vision/ocr.py` | `OCR.ocr()` | L425-L542 | OCR协调器 |
-| `deepdoc/vision/layout_recognizer.py` | `LayoutRecognizer` | L1-L400+ | 布局识别 |
-| `deepdoc/vision/table_structure_recognizer.py` | `TableStructureRecognizer` | L1-L450+ | 表格结构识别 |
+| 文件                                             | 核心类/函数                     | 行号          | 功能           |
+| ---------------------------------------------- | -------------------------- | ----------- | ------------ |
+| `rag/app/naive.py`                             | `chunk()`                  | L729-L1078  | 文档分块总入口      |
+| `rag/app/naive.py`                             | `by_deepdoc()`             | L86-L98     | PDF解析入口      |
+| `rag/nlp/__init__.py`                          | `naive_merge()`            | L1070-L1126 | 基础文本合并       |
+| `rag/nlp/__init__.py`                          | `naive_merge_docx()`       | L1463-L1485 | DOCX专用合并     |
+| `rag/nlp/__init__.py`                          | `tokenize_chunks()`        | L302-L327   | Chunk Token化 |
+| `deepdoc/parser/pdf_parser.py`                 | `RAGFlowPdfParser`         | L1-L2057    | PDF完整解析      |
+| `deepdoc/parser/docx_parser.py`                | `RAGFlowDocxParser`        | L1-L450+    | DOCX解析       |
+| `deepdoc/vision/ocr.py`                        | `OCR.ocr()`                | L425-L542   | OCR协调器       |
+| `deepdoc/vision/layout_recognizer.py`          | `LayoutRecognizer`         | L1-L400+    | 布局识别         |
+| `deepdoc/vision/table_structure_recognizer.py` | `TableStructureRecognizer` | L1-L450+    | 表格结构识别       |
 
 ### 8.4 对话生成与API
 
-| 文件 | 核心类/函数 | 行号 | 功能 |
-|------|------------|------|------|
-| `api/db/services/dialog_service.py` | `async_chat()` | L455-L781 | RAG全链路编排 |
-| `api/db/services/dialog_service.py` | `use_sql()` | L295-L380 | Text2SQL检索 |
-| `api/db/services/llm_service.py` | `LLMBundle` | L85-L500+ | LLM统一封装 |
-| `api/apps/conversation_app.py` | `completion()` | L169-L254 | 对话API |
-| `api/apps/conversation_app.py` | `list_conversation()` | L154-L166 | 会话列表API |
-| `api/db/services/conversation_service.py` | `async_completion()` | L112-L201 | 异步对话接口 |
-| `api/db/services/conversation_service.py` | `structure_answer()` | L68-L109 | 答案结构化
+| 文件                                        | 核心类/函数                | 行号        | 功能         |
+| ----------------------------------------- | --------------------- | --------- | ---------- |
+| `api/db/services/dialog_service.py`       | `async_chat()`        | L455-L781 | RAG全链路编排   |
+| `api/db/services/dialog_service.py`       | `use_sql()`           | L295-L380 | Text2SQL检索 |
+| `api/db/services/llm_service.py`          | `LLMBundle`           | L85-L500+ | LLM统一封装    |
+| `api/apps/conversation_app.py`            | `completion()`        | L169-L254 | 对话API      |
+| `api/apps/conversation_app.py`            | `list_conversation()` | L154-L166 | 会话列表API    |
+| `api/db/services/conversation_service.py` | `async_completion()`  | L112-L201 | 异步对话接口     |
+| `api/db/services/conversation_service.py` | `structure_answer()`  | L68-L109  | 答案结构化      |
+
