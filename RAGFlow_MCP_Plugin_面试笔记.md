@@ -1,4 +1,4 @@
-# RAGFlow MCP 与 Plugin 架构面试笔记
+# RAGFlow MCP 与 Plugin 架构笔记
 
 ---
 
