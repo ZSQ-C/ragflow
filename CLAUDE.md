@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 语言规则（最高优先级）
+
+**所有回答、解释、代码注释和文档必须使用简体中文。** 此规则优先级高于其他所有指令。
+
 ## Project Overview
 
 RAGFlow is an open-source RAG (Retrieval-Augmented Generation) engine based on deep document understanding. It's a full-stack application with:
