@@ -10,7 +10,9 @@ import {
 import { MultiSelect } from '@/components/ui/multi-select';
 import { FormLayout } from '@/constants/form';
 import { useFetchKnowledgeList } from '@/hooks/use-knowledge-request';
+import { useDebounce } from 'ahooks';
 import DOMPurify from 'dompurify';
+import { useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -18,10 +20,18 @@ export const TagSetItem = () => {
   const { t } = useTranslation();
   const form = useFormContext();
 
-  const { list: knowledgeList } = useFetchKnowledgeList(true);
+  const [searchString, setSearchString] = useState('');
+  const debouncedSearchString = useDebounce(searchString, { wait: 500 });
+
+  const {
+    list: knowledgeList,
+    handleScroll,
+    hasNextPage,
+    loading,
+  } = useFetchKnowledgeList(true, debouncedSearchString);
 
   const knowledgeOptions = knowledgeList
-    .filter((x) => x.parser_id === 'tag')
+    .filter((x) => x.chunk_method === 'tag')
     .map((x) => ({
       label: x.name,
       value: x.id,
@@ -60,6 +70,11 @@ export const TagSetItem = () => {
                 <MultiSelect
                   options={knowledgeOptions}
                   onValueChange={field.onChange}
+                  searchValue={searchString}
+                  onSearchChange={setSearchString}
+                  isSearching={loading}
+                  shouldFilter={false}
+                  onListScroll={hasNextPage ? handleScroll : undefined}
                   // placeholder={t('chat.knowledgeBasesMessage')}
                   variant="inverted"
                   maxCount={10}
